@@ -18,7 +18,8 @@ PERSIST_JSON_FILE = 'bookstate.json'
 # contants for GPIO pins
 TRIG = 23
 ECHO = 24
-
+LED1 = 17
+LED2 = 27
 
 # state
 class BookState():
@@ -51,6 +52,7 @@ class BookState():
         self.last_state_change = datetime.now()
         prev_state_duration = self.last_state_change - prev_state_change
         self.persist()
+        self.update_presence_led()
 
         if self.is_book_present:
             send_notification(f'Book was set down after {prev_state_duration}')
@@ -74,6 +76,13 @@ class BookState():
                 self.is_book_present = state['is_book_present']
                 self.last_state_change = datetime.fromisoformat(state['last_state_change'])
                 self.last_nag_notif = datetime.fromisoformat(state['last_nag_notif'])
+
+
+    def update_presence_led(self):
+        if self.is_book_present:
+            GPIO.output(LED2, GPIO.HIGH)
+        else:
+            GPIO.output(LED2, GPIO.LOW)
 
 
 def send_notification(msg:str):
@@ -117,14 +126,29 @@ def get_proximity() -> float:
     return distance
 
 
+def led_setup():
+    GPIO.setup(LED1, GPIO.OUT)
+    GPIO.setup(LED2, GPIO.OUT)
+    # turn on LED1 as an indicator that the program is running
+    GPIO.output(LED1, GPIO.HIGH)
+
+
+def led_cleanup():
+    GPIO.output(LED1, GPIO.LOW)
+    GPIO.output(LED2, GPIO.LOW)
+
+
 def setup(state:BookState):
     state.restore()
     GPIO.setmode(GPIO.BCM)
+    led_setup()
     proximity_setup()    
+    state.update_presence_led()
 
 
 def cleanup():
     print("Cleaning up")
+    led_cleanup()
     GPIO.cleanup()
 
 

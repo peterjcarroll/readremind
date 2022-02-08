@@ -1,0 +1,14 @@
+[Unit]
+Description=Reading Reminder
+After=network-online.target
+ 
+[Service]
+ExecStart=/usr/bin/python3 /home/pi/readremind/readremind.py
+WorkingDirectory=/home/pi/readremind/
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=pi
+ 
+[Install]
+WantedBy=multi-user.target
